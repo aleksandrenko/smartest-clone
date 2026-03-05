@@ -17,7 +17,6 @@ const MissingLetters: React.FC<MissingLettersProps> = ({
   isSubmitted,
 }) => {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const [imageError, setImageError] = React.useState(false);
 
   const word = question.word.english;
   const blankSet = new Set(question.blankIndices);
@@ -162,23 +161,28 @@ const MissingLetters: React.FC<MissingLettersProps> = ({
 
   return (
     <Box sx={{ width: '100%' }}>
-      {/* Image */}
-      {question.imageUrl && !imageError && (
-        <Box
-          component="img"
-          src={question.imageUrl}
-          alt={question.word.bulgarian}
-          onError={() => setImageError(true)}
-          sx={{
-            borderRadius: '12px',
-            maxWidth: '300px',
-            display: 'block',
-            margin: '0 auto 16px',
-            width: '100%',
-            objectFit: 'cover',
-          }}
-        />
-      )}
+      {/* Placeholder image */}
+      <Box
+        sx={{
+          width: 120,
+          height: 120,
+          borderRadius: '12px',
+          backgroundColor: '#f0f0f0',
+          border: '2px dashed #cedaf3',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 16px',
+          color: '#b0b0b0',
+          userSelect: 'none',
+        }}
+      >
+        <Box sx={{ fontSize: 36, lineHeight: 1 }}>🖼️</Box>
+        <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#b0b0b0', mt: 0.5 }}>
+          (no image)
+        </Typography>
+      </Box>
 
       {/* Bulgarian hint */}
       <Typography
