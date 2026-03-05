@@ -57,7 +57,7 @@ const TestLobby: React.FC<TestLobbyProps> = ({ onStart }) => {
           variant="h6"
           sx={{ fontWeight: 700, color: '#394da8', mb: 1 }}
         >
-          JUNIOR 2026 — Mock Test
+          LEVel: JUNIOR 2026 — Mock Test
         </Typography>
         <Typography
           variant="body2"

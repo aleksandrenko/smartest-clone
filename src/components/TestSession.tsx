@@ -239,7 +239,7 @@ const TestSession: React.FC<TestSessionProps> = ({
               variant="body2"
               sx={{ opacity: 0.85, fontSize: 14 }}
             >
-              Spelling Bee JUNIOR 2026 — Mock Test
+              Spelling Bee — LEVel: JUNIOR 2026 — Mock Test
             </Typography>
           </Box>
 
