@@ -503,11 +503,16 @@ function generateMatchPairs(usedWords: Set<number>): MatchPairsQuestion[] {
     const translationWords = pickRandom(available, 5);
     translationWords.forEach((w) => usedWords.add(w.id));
 
+    const pairs = translationWords.map((w) => ({ left: w.english, right: w.bulgarian }));
+    // Shuffle right side so it's not in the same order as left
+    const shuffledRights = shuffle(pairs.map((p) => p.right));
+    const shuffledPairs = pairs.map((p, idx) => ({ left: p.left, right: shuffledRights[idx] }));
+
     questions.push({
       id: nextId(),
       type: QuestionType.MatchPairs as const,
       variant: 'translation',
-      pairs: translationWords.map((w) => ({ left: w.english, right: w.bulgarian })),
+      pairs: shuffledPairs,
       points: TEST_DISTRIBUTION[QuestionType.MatchPairs].pointsEach,
     });
   }
@@ -540,36 +545,88 @@ function generateMatchPairs(usedWords: Set<number>): MatchPairsQuestion[] {
 }
 
 function generateWordsFromYourList(usedWords: Set<number>): WordsFromYourListQuestion[] {
-  // Pick ~5 words from the study list and ~5 decoy words (not in list)
-  const fromList = pickRandom(allWords, 5);
+  const count = TEST_DISTRIBUTION[QuestionType.WordsFromYourList].count;
+  const questions: WordsFromYourListQuestion[] = [];
 
-  // Generate decoys — common English words NOT in our 400-word list
+  // Decoy pool — words similar in length, difficulty, and style to the 400 study words
+  // but NOT in the study list. These are real English words a kid might confuse.
   const decoyPool = [
-    'algorithm', 'blockchain', 'cryptocurrency', 'debugging', 'elasticsearch',
-    'fibonacci', 'graphite', 'hexadecimal', 'iteration', 'javascript',
-    'kubernetes', 'logarithm', 'middleware', 'namespace', 'optimization',
-    'palindrome', 'quadratic', 'recursion', 'serialization', 'throttle',
-    'ubiquitous', 'validation', 'websocket', 'xenophobia', 'zeitgeist',
-    'pneumonia', 'psychology', 'lieutenant', 'burgundy', 'champagne',
-    'silhouette', 'boutique', 'chauffeur', 'entrepreneur', 'rendezvous',
+    'absence', 'achieve', 'ancient', 'anxious', 'bargain', 'beneath',
+    'biscuit', 'breathe', 'captain', 'caution', 'ceiling', 'certain',
+    'channel', 'chapter', 'chimney', 'circuit', 'climate', 'coconut',
+    'college', 'command', 'compass', 'concern', 'confuse', 'connect',
+    'console', 'contain', 'contest', 'control', 'costume', 'cottage',
+    'council', 'counter', 'courage', 'cushion', 'declare', 'defense',
+    'deliver', 'diamond', 'digress', 'diploma', 'discuss', 'disease',
+    'dolphin', 'dominoe', 'drought', 'economy', 'educate', 'embrace',
+    'emperor', 'enquire', 'episode', 'essence', 'examine', 'exclaim',
+    'exhaust', 'expense', 'explode', 'explore', 'extreme', 'fiction',
+    'flannel', 'flavour', 'fortune', 'fragile', 'freedom', 'funeral',
+    'furnace', 'gadgets', 'galerie', 'gazette', 'general', 'genuine',
+    'glimpse', 'gondola', 'granite', 'gravity', 'habitat', 'halfway',
+    'hamster', 'harbour', 'harmony', 'harvest', 'heating', 'heavily',
+    'highway', 'history', 'horizon', 'hostile', 'however', 'husband',
+    'iceberg', 'imagine', 'immense', 'include', 'inflate', 'inhabit',
+    'initial', 'inquire', 'instead', 'involve', 'javelin', 'jealous',
+    'journey', 'justice', 'kitchen', 'knuckle', 'landing', 'laundry',
+    'leading', 'leather', 'lecture', 'lettuce', 'license', 'literal',
+    'luggage', 'machine', 'mammoth', 'mankind', 'martial', 'massage',
+    'maximal', 'measure', 'medical', 'memento', 'mention', 'million',
+    'mineral', 'minimum', 'miracle', 'mixture', 'modesty', 'monitor',
+    'morning', 'mustard', 'mystery', 'narrate', 'natural', 'neither',
+    'nervous', 'neutral', 'nostril', 'nothing', 'numeral', 'nurture',
+    'obscure', 'obvious', 'offense', 'operate', 'opinion', 'origami',
+    'outdoor', 'outlook', 'package', 'pajamas', 'panther', 'passage',
+    'pastime', 'patient', 'patriot', 'pattern', 'peculia', 'penguin',
+    'percent', 'perfume', 'persist', 'pilgrim', 'plastic', 'platoon',
+    'plumber', 'polaris', 'portion', 'precise', 'premium', 'prepare',
+    'preview', 'primary', 'privacy', 'problem', 'produce', 'profile',
+    'program', 'project', 'promise', 'protest', 'provide', 'pudding',
+    'pumpkin', 'purpose', 'puzzled', 'qualify', 'quarrel', 'quarter',
+    'radical', 'reactor', 'receipt', 'recruit', 'reflect', 'regular',
+    'related', 'remnant', 'request', 'require', 'reserve', 'resident',
+    'resolve', 'respect', 'restore', 'reunion', 'revenge', 'rhythms',
+    'roaming', 'routine', 'salvage', 'sandals', 'scandal', 'scatter',
+    'scholar', 'scissor', 'section', 'serious', 'shelter', 'sheriff',
+    'silence', 'similar', 'sincere', 'skipper', 'slender', 'smuggle',
+    'soldier', 'sparrow', 'special', 'sponsor', 'squelch', 'stadium',
+    'stamina', 'stellar', 'stomach', 'storage', 'strange', 'student',
+    'subject', 'succeed', 'suffice', 'suggest', 'summary', 'support',
+    'surface', 'surplus', 'survive', 'suspect', 'symptom', 'tableau',
+    'tourist', 'tragedy', 'trainer', 'transit', 'trouble', 'trumpet',
+    'turbine', 'typical', 'uniform', 'unravel', 'unusual', 'upgrade',
+    'upright', 'vaccine', 'vagrant', 'vanilla', 'variety', 'venture',
+    'verbose', 'version', 'vibrant', 'vintage', 'violent', 'warrant',
+    'weather', 'whisper', 'widower', 'wrangle', 'wreathe', 'yoghurt',
   ];
+
   const allEnglishLower = new Set(allWords.map((w) => w.english.toLowerCase()));
-  const validDecoys = decoyPool.filter((d) => !allEnglishLower.has(d.toLowerCase()));
-  const selectedDecoys = pickRandom(validDecoys, 5);
+  const validDecoys = shuffle(decoyPool.filter((d) => !allEnglishLower.has(d.toLowerCase())));
+  let decoyIndex = 0;
 
-  const items = shuffle([
-    ...fromList.map((w) => ({ english: w.english, isFromList: true })),
-    ...selectedDecoys.map((d) => ({ english: d, isFromList: false })),
-  ]);
+  for (let i = 0; i < count; i++) {
+    const available = allWords.filter((w) => !usedWords.has(w.id));
+    const fromList = pickRandom(available, 5);
+    fromList.forEach((w) => usedWords.add(w.id));
 
-  return [
-    {
+    // Take next 5 decoys from shuffled pool
+    const selectedDecoys = validDecoys.slice(decoyIndex, decoyIndex + 5);
+    decoyIndex += 5;
+
+    const items = shuffle([
+      ...fromList.map((w) => ({ english: w.english, isFromList: true })),
+      ...selectedDecoys.map((d) => ({ english: d, isFromList: false })),
+    ]);
+
+    questions.push({
       id: nextId(),
       type: QuestionType.WordsFromYourList as const,
       words: items,
       points: TEST_DISTRIBUTION[QuestionType.WordsFromYourList].pointsEach,
-    },
-  ];
+    });
+  }
+
+  return questions;
 }
 
 // ─── Main Generator ──────────────────────────────────────────────────────
