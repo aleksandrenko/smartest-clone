@@ -171,11 +171,11 @@ export interface TestConfig {
 export const TEST_DISTRIBUTION = {
   [QuestionType.ListenAndType]: { count: 9, pointsEach: 2 },
   [QuestionType.SpellingJudge]: { count: 9, pointsEach: 2 },
-  [QuestionType.SelectCorrectlySpelled]: { count: 3, pointsEach: 6 },
+  [QuestionType.SelectCorrectlySpelled]: { count: 4, pointsEach: 6 },
   [QuestionType.MissingLetters]: { count: 7, pointsEach: 2 },
-  [QuestionType.MatchPairs]: { count: 4, pointsEach: 5 },
-  [QuestionType.WordsFromYourList]: { count: 3, pointsEach: 5 },
+  [QuestionType.MatchPairs]: { count: 5, pointsEach: 5 },
+  [QuestionType.WordsFromYourList]: { count: 4, pointsEach: 5 },
 } as const;
 
-export const TOTAL_QUESTIONS = 35;
-export const TOTAL_POINTS = 83;
+export const TOTAL_QUESTIONS = 38;
+export const TOTAL_POINTS = 99;

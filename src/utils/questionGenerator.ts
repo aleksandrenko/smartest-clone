@@ -492,21 +492,27 @@ function generateMissingLetters(usedWords: Set<number>): MissingLettersQuestion[
 
 function generateMatchPairs(usedWords: Set<number>): MatchPairsQuestion[] {
   const questions: MatchPairsQuestion[] = [];
+  const count = TEST_DISTRIBUTION[QuestionType.MatchPairs].count;
 
-  // Q1: Translation matching (EN ↔ BG) — 5 pairs
-  const available1 = allWords.filter((w) => !usedWords.has(w.id));
-  const translationWords = pickRandom(available1, 5);
-  translationWords.forEach((w) => usedWords.add(w.id));
+  // Always generate 1 word-halves, rest are translation
+  const translationCount = count - 1;
 
-  questions.push({
-    id: nextId(),
-    type: QuestionType.MatchPairs as const,
-    variant: 'translation',
-    pairs: translationWords.map((w) => ({ left: w.english, right: w.bulgarian })),
-    points: TEST_DISTRIBUTION[QuestionType.MatchPairs].pointsEach,
-  });
+  // Translation matching questions (EN ↔ BG)
+  for (let i = 0; i < translationCount; i++) {
+    const available = allWords.filter((w) => !usedWords.has(w.id));
+    const translationWords = pickRandom(available, 5);
+    translationWords.forEach((w) => usedWords.add(w.id));
 
-  // Q2: Word halves — 5 pairs
+    questions.push({
+      id: nextId(),
+      type: QuestionType.MatchPairs as const,
+      variant: 'translation',
+      pairs: translationWords.map((w) => ({ left: w.english, right: w.bulgarian })),
+      points: TEST_DISTRIBUTION[QuestionType.MatchPairs].pointsEach,
+    });
+  }
+
+  // 1x Word halves — 5 pairs
   const available2 = allWords.filter((w) => !usedWords.has(w.id) && w.english.length >= 6);
   const halvesCandidates = shuffle(available2);
   const halvePairs: Array<{ left: string; right: string }> = [];
