@@ -101,17 +101,23 @@ const MissingLetters: React.FC<MissingLettersProps> = ({
               maxLength={1}
               disabled={isSubmitted}
               style={{
-                width: '40px',
-                height: '40px',
-                fontSize: '28px',
+                width: '20px',
+                height: '20px',
+                fontSize: '16px',
                 fontWeight: 800,
                 fontFamily: 'Nunito, sans-serif',
                 textAlign: 'center',
-                border: 'none',
-                borderBottom: `3px solid ${
+                border: `2px solid ${
                   isWrong || isEmpty ? '#ff397e' : isRight ? '#1dc198' : '#394da8'
                 }`,
-                backgroundColor: 'transparent',
+                borderRadius: '3px',
+                backgroundColor: isSubmitted
+                  ? isRight
+                    ? 'rgba(204,253,197,0.3)'
+                    : isWrong || isEmpty
+                      ? 'rgba(255,173,173,0.15)'
+                      : 'transparent'
+                  : '#fff',
                 color: isWrong || isEmpty ? '#ff397e' : isRight ? '#1dc198' : '#394da8',
                 outline: 'none',
                 padding: '0',

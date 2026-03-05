@@ -201,34 +201,6 @@ const silentLetterDrop: MisspellStrategy = (word) => {
 };
 
 /**
- * Strategy 5: Transpose two adjacent letters (especially around vowels).
- * E.g., "receive" → "recieve", "their" → "thier"
- */
-const transposeAdjacent: MisspellStrategy = (word) => {
-  if (word.length < 4) return null;
-  // Prefer swapping around vowel clusters
-  const candidates: number[] = [];
-  for (let i = 1; i < word.length - 2; i++) {
-    const a = word[i].toLowerCase();
-    const b = word[i + 1].toLowerCase();
-    if (a !== b && (VOWELS.has(a) || VOWELS.has(b))) {
-      candidates.push(i);
-    }
-  }
-  if (candidates.length === 0) {
-    // Fallback: any adjacent pair in the interior
-    for (let i = 1; i < word.length - 2; i++) {
-      if (word[i] !== word[i + 1]) candidates.push(i);
-    }
-  }
-  if (candidates.length > 0) {
-    const pos = candidates[Math.floor(Math.random() * candidates.length)];
-    return word.slice(0, pos) + word[pos + 1] + word[pos] + word.slice(pos + 2);
-  }
-  return null;
-};
-
-/**
  * Strategy 6: Schwa vowel error — replace an unstressed vowel
  * (typically in the middle of longer words) with 'e' or 'a'.
  * E.g., "definite" → "definate", "separate" → "seperate"
@@ -263,11 +235,10 @@ const schwaError: MisspellStrategy = (word) => {
 function misspellWord(word: string): string {
   // Weighted strategy selection — more common errors have higher weight
   const weightedStrategies: Array<{ fn: MisspellStrategy; weight: number }> = [
-    { fn: confuseVowel, weight: 30 },
-    { fn: doubleLetterError, weight: 25 },
-    { fn: phoneticSub, weight: 20 },
+    { fn: confuseVowel, weight: 35 },
+    { fn: doubleLetterError, weight: 28 },
+    { fn: phoneticSub, weight: 22 },
     { fn: schwaError, weight: 10 },
-    { fn: transposeAdjacent, weight: 10 },
     { fn: silentLetterDrop, weight: 5 },
   ];
 
