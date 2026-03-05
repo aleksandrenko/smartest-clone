@@ -77,8 +77,10 @@ export interface MatchPairsQuestion {
   type: QuestionType.MatchPairs;
   /** Variant: 'translation' = EN↔BG, 'word-halves' = split word parts */
   variant: 'translation' | 'word-halves';
-  /** The pairs to match (left side → right side) */
+  /** The correct pairs to match (left side → right side) — this is the answer key */
   pairs: Array<{ left: string; right: string }>;
+  /** Shuffled right-side items for display (different order than pairs) */
+  shuffledRights: string[];
   /** Points for this question */
   points: number;
 }

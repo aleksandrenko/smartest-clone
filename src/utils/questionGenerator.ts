@@ -504,15 +504,15 @@ function generateMatchPairs(usedWords: Set<number>): MatchPairsQuestion[] {
     translationWords.forEach((w) => usedWords.add(w.id));
 
     const pairs = translationWords.map((w) => ({ left: w.english, right: w.bulgarian }));
-    // Shuffle right side so it's not in the same order as left
+    // Shuffle right side for display so it's not in the same order as left
     const shuffledRights = shuffle(pairs.map((p) => p.right));
-    const shuffledPairs = pairs.map((p, idx) => ({ left: p.left, right: shuffledRights[idx] }));
 
     questions.push({
       id: nextId(),
       type: QuestionType.MatchPairs as const,
       variant: 'translation',
-      pairs: shuffledPairs,
+      pairs,
+      shuffledRights,
       points: TEST_DISTRIBUTION[QuestionType.MatchPairs].pointsEach,
     });
   }
@@ -533,11 +533,15 @@ function generateMatchPairs(usedWords: Set<number>): MatchPairsQuestion[] {
   }
   halveWordsUsed.forEach((w) => usedWords.add(w.id));
 
+  // Shuffle right side for display
+  const shuffledHalveRights = shuffle(halvePairs.map((p) => p.right));
+
   questions.push({
     id: nextId(),
     type: QuestionType.MatchPairs as const,
     variant: 'word-halves',
     pairs: halvePairs,
+    shuffledRights: shuffledHalveRights,
     points: TEST_DISTRIBUTION[QuestionType.MatchPairs].pointsEach,
   });
 

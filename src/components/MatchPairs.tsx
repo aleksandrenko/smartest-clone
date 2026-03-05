@@ -34,7 +34,8 @@ const MatchPairs: React.FC<MatchPairsProps> = ({
   const [, setForceRender] = useState(0);
 
   const leftItems = question.pairs.map((p) => p.left);
-  const allRightItems = question.pairs.map((p) => p.right);
+  // Use shuffledRights for display order (not pairs order which is the answer key)
+  const allRightItems = question.shuffledRights;
 
   // Pool = right items not yet paired
   const pairedRights = new Set(Object.values(userPairings));
