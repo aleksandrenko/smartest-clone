@@ -684,6 +684,11 @@ export function gradeQuestion(question: Question, answer: UserAnswerData): { isC
       );
       const selectedSet = new Set(a.selectedIndices);
 
+      // If nothing selected, score is 0
+      if (selectedSet.size === 0) {
+        return { isCorrect: false, earnedPoints: 0 };
+      }
+
       // Score: 1 point per correct selection/non-selection, scaled to question points
       let correctActions = 0;
       question.words.forEach((_, i) => {
@@ -736,6 +741,11 @@ export function gradeQuestion(question: Question, answer: UserAnswerData): { isC
         question.words.map((w, i) => (w.isFromList ? i : -1)).filter((i) => i >= 0)
       );
       const selectedSet = new Set(a.selectedIndices);
+
+      // If nothing selected, score is 0
+      if (selectedSet.size === 0) {
+        return { isCorrect: false, earnedPoints: 0 };
+      }
 
       let correctActions = 0;
       question.words.forEach((_, i) => {
