@@ -270,9 +270,9 @@ function misspellWord(word: string): string {
     return word.slice(0, pos) + replacement + word.slice(pos + 1);
   }
 
-  // Ultra-fallback for vowelless words (very rare)
-  return word.slice(0, -1) + word.slice(-1) + word.slice(-1);
-}
+  // Ultra-fallback for vowelless words (very rare) — insert a common letter
+  return word.slice(0, Math.floor(word.length / 2)) + 'e' + word.slice(Math.floor(word.length / 2));
+  }
 
 // ─── Word halves splitter ────────────────────────────────────────────────
 
@@ -414,50 +414,55 @@ function generateSpellingJudge(usedWords: Set<number>): SpellingJudgeQuestion[] 
 }
 
 function generateSelectCorrectlySpelled(usedWords: Set<number>): SelectCorrectlySpelledQuestion[] {
-  const available = allWords.filter((w) => !usedWords.has(w.id));
-  const selected = pickRandom(available, 10); // ~10 words to choose from
-  selected.forEach((w) => usedWords.add(w.id));
+  const count = TEST_DISTRIBUTION[QuestionType.SelectCorrectlySpelled].count;
+  const questions: SelectCorrectlySpelledQuestion[] = [];
 
-  // ~50% correct, ~50% misspelled
-  const wordItems = selected.map((word) => {
-    const isCorrect = Math.random() > 0.5;
-    return {
-      displayed: isCorrect ? word.english : misspellWord(word.english),
-      isCorrect,
-      correctSpelling: word.english,
-    };
-  });
+  for (let qi = 0; qi < count; qi++) {
+    const available = allWords.filter((w) => !usedWords.has(w.id));
+    const selected = pickRandom(available, 10); // ~10 words to choose from per question
+    selected.forEach((w) => usedWords.add(w.id));
 
-  // Ensure at least 3 correct and 3 misspelled
-  let correctCount = wordItems.filter((w) => w.isCorrect).length;
-  let idx = 0;
-  while (correctCount < 3 && idx < wordItems.length) {
-    if (!wordItems[idx].isCorrect) {
-      wordItems[idx].displayed = wordItems[idx].correctSpelling;
-      wordItems[idx].isCorrect = true;
-      correctCount++;
+    // ~50% correct, ~50% misspelled
+    const wordItems = selected.map((word) => {
+      const isCorrect = Math.random() > 0.5;
+      return {
+        displayed: isCorrect ? word.english : misspellWord(word.english),
+        isCorrect,
+        correctSpelling: word.english,
+      };
+    });
+
+    // Ensure at least 3 correct and 3 misspelled
+    let correctCount = wordItems.filter((w) => w.isCorrect).length;
+    let idx = 0;
+    while (correctCount < 3 && idx < wordItems.length) {
+      if (!wordItems[idx].isCorrect) {
+        wordItems[idx].displayed = wordItems[idx].correctSpelling;
+        wordItems[idx].isCorrect = true;
+        correctCount++;
+      }
+      idx++;
     }
-    idx++;
-  }
-  let wrongCount = wordItems.filter((w) => !w.isCorrect).length;
-  idx = wordItems.length - 1;
-  while (wrongCount < 3 && idx >= 0) {
-    if (wordItems[idx].isCorrect) {
-      wordItems[idx].displayed = misspellWord(wordItems[idx].correctSpelling);
-      wordItems[idx].isCorrect = false;
-      wrongCount++;
+    let wrongCount = wordItems.filter((w) => !w.isCorrect).length;
+    idx = wordItems.length - 1;
+    while (wrongCount < 3 && idx >= 0) {
+      if (wordItems[idx].isCorrect) {
+        wordItems[idx].displayed = misspellWord(wordItems[idx].correctSpelling);
+        wordItems[idx].isCorrect = false;
+        wrongCount++;
+      }
+      idx--;
     }
-    idx--;
-  }
 
-  return [
-    {
+    questions.push({
       id: nextId(),
       type: QuestionType.SelectCorrectlySpelled as const,
       words: shuffle(wordItems),
       points: TEST_DISTRIBUTION[QuestionType.SelectCorrectlySpelled].pointsEach,
-    },
-  ];
+    });
+  }
+
+  return questions;
 }
 
 function generateMissingLetters(usedWords: Set<number>): MissingLettersQuestion[] {
@@ -613,9 +618,13 @@ function generateWordsFromYourList(usedWords: Set<number>): WordsFromYourListQue
     const fromList = pickRandom(available, 5);
     fromList.forEach((w) => usedWords.add(w.id));
 
-    // Take next 5 decoys from shuffled pool
-    const selectedDecoys = validDecoys.slice(decoyIndex, decoyIndex + 5);
-    decoyIndex += 5;
+    // Take next 5 decoys from shuffled pool (wrap around if exhausted)
+    const selectedDecoys: string[] = [];
+    for (let d = 0; d < 5; d++) {
+      if (decoyIndex < validDecoys.length) {
+        selectedDecoys.push(validDecoys[decoyIndex++]);
+      }
+    }
 
     const items = shuffle([
       ...fromList.map((w) => ({ english: w.english, isFromList: true })),

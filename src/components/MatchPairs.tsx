@@ -37,20 +37,31 @@ const MatchPairs: React.FC<MatchPairsProps> = ({
   // Use shuffledRights for display order (not pairs order which is the answer key)
   const allRightItems = question.shuffledRights;
 
-  // Pool = right items not yet paired
-  const pairedRights = new Set(Object.values(userPairings));
-  const pool = allRightItems.filter((r) => !pairedRights.has(r));
+  // Build map: for each left item that has a pairing, find which shuffledRights index it maps to
+  const leftToRightIdx = new Map<string, number>();
+  const claimedIndices = new Set<number>();
+  for (const [leftKey, val] of Object.entries(userPairings)) {
+    const idx = allRightItems.findIndex((r, i) => r === val && !claimedIndices.has(i));
+    if (idx >= 0) {
+      leftToRightIdx.set(leftKey, idx);
+      claimedIndices.add(idx);
+    }
+  }
+  const pool = allRightItems
+    .map((r, i) => ({ value: r, idx: i }))
+    .filter(({ idx }) => !claimedIndices.has(idx));
 
   const handleDragEnd = useCallback(
     (result: DropResult) => {
       if (!result.destination || isSubmitted) return;
 
       const { source, destination, draggableId } = result;
+      // Extract the text value from draggableId (format: 'right-{idx}-{value}')
+      const rightValue = draggableId.replace(/^right-\d+-/, '');
 
       // Dragging from pool to a left-item slot
       if (source.droppableId === 'pool' && destination.droppableId.startsWith('slot-')) {
         const leftKey = destination.droppableId.replace('slot-', '');
-        const rightValue = draggableId.replace('right-', '');
 
         const newPairings = { ...userPairings };
         // If slot already occupied, put old value back to pool
@@ -68,7 +79,6 @@ const MatchPairs: React.FC<MatchPairsProps> = ({
       else if (source.droppableId.startsWith('slot-') && destination.droppableId.startsWith('slot-')) {
         const fromLeft = source.droppableId.replace('slot-', '');
         const toLeft = destination.droppableId.replace('slot-', '');
-        const rightValue = draggableId.replace('right-', '');
 
         const newPairings = { ...userPairings };
         // If destination already has something, swap
@@ -187,7 +197,7 @@ const MatchPairs: React.FC<MatchPairsProps> = ({
                     >
                       {paired ? (
                         <Draggable
-                          draggableId={`right-${paired}`}
+                          draggableId={`right-${leftToRightIdx.get(left) ?? 0}-${paired}`}
                           index={0}
                           isDragDisabled={isSubmitted}
                         >
@@ -246,8 +256,8 @@ const MatchPairs: React.FC<MatchPairsProps> = ({
                 >
                   {pool.map((right, idx) => (
                     <Draggable
-                      key={`right-${right}`}
-                      draggableId={`right-${right}`}
+                      key={`right-${right.idx}-${right.value}`}
+                      draggableId={`right-${right.idx}-${right.value}`}
                       index={idx}
                     >
                       {(dragProvided, dragSnapshot) => (
@@ -274,7 +284,7 @@ const MatchPairs: React.FC<MatchPairsProps> = ({
                             },
                           }}
                         >
-                          {right}
+                          {right.value}
                         </Box>
                       )}
                     </Draggable>
