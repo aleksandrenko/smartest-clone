@@ -377,14 +377,6 @@ function splitWordIntoHalves(word: string): { left: string; right: string } | nu
 }
 
 // ─── Image URLs for MissingLetters ───────────────────────────────────────
-
-/** Returns a placeholder image URL based on the word's meaning */
-function getImageForWord(word: string): string {
-  // Use picsum for random images (consistent seed from word)
-  const seed = word.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-  return `https://picsum.photos/seed/${seed}/300/200`;
-}
-
 // ─── Question Generators ─────────────────────────────────────────────────
 
 function generateListenAndType(usedWords: Set<number>): ListenAndTypeQuestion[] {
@@ -493,7 +485,6 @@ function generateMissingLetters(usedWords: Set<number>): MissingLettersQuestion[
       type: QuestionType.MissingLetters as const,
       word,
       blankIndices,
-      imageUrl: getImageForWord(word.english),
       points: TEST_DISTRIBUTION[QuestionType.MissingLetters].pointsEach,
     };
   });
