@@ -179,5 +179,5 @@ export const TEST_DISTRIBUTION = {
   [QuestionType.WordsFromYourList]: { count: 4, pointsEach: 5 },
 } as const;
 
-export const TOTAL_QUESTIONS = 38;
-export const TOTAL_POINTS = 99;
+export const TOTAL_QUESTIONS = Object.values(TEST_DISTRIBUTION).reduce((sum, d) => sum + d.count, 0);
+export const TOTAL_POINTS = Object.values(TEST_DISTRIBUTION).reduce((sum, d) => sum + d.count * d.pointsEach, 0);

@@ -7,9 +7,12 @@ import {
   Slider,
   Switch,
   FormControlLabel,
+  Divider,
 } from '@mui/material';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
+import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
 import { TestConfig, TOTAL_QUESTIONS, TOTAL_POINTS } from '../data/types';
+import { getTestHistory } from '../utils/testHistory';
 
 interface TestLobbyProps {
   onStart: (config: TestConfig) => void;
@@ -79,11 +82,83 @@ const TestLobby: React.FC<TestLobbyProps> = ({ onStart }) => {
             {TOTAL_QUESTIONS} въпроса • {TOTAL_POINTS} точки
           </Typography>
           <Typography variant="body2" sx={{ color: '#8c8c8c', fontSize: 13 }}>
-            7× напиши думата • 7× правилно/грешно • 1× избери правилните •
-            5× липсващи букви • 2× свържи двойки • 1× думи от списъка
-          </Typography>
+            9× напиши думата • 9× правилно/грешно • 4× избери правилните •
+            7× липсващи букви • 5× свържи двойки • 4× думи от списъка
+        </Typography>
         </Box>
 
+        {/* History */}
+        {(() => {
+          const history = getTestHistory();
+          if (history.length === 0) return null;
+          const last10 = history.slice(-10).reverse();
+          const best = Math.max(...history.map((h) => h.percentage));
+          const avg = Math.round(history.reduce((s, h) => s + h.percentage, 0) / history.length);
+          return (
+            <Box sx={{ mb: 3 }}>
+              <Divider sx={{ mb: 2 }} />
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1.5 }}>
+                <EmojiEventsRoundedIcon sx={{ color: '#ffb921', fontSize: 22 }} />
+                <Typography variant="body1" sx={{ fontWeight: 700, color: '#36363f' }}>
+                  История ({history.length} {history.length === 1 ? 'тест' : 'теста'})
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mb: 1.5 }}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 800, color: '#1dc198' }}>{best}%</Typography>
+                  <Typography variant="caption" sx={{ color: '#8c8c8c' }}>Най-добър</Typography>
+                </Box>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 800, color: '#394da8' }}>{avg}%</Typography>
+                  <Typography variant="caption" sx={{ color: '#8c8c8c' }}>Среден</Typography>
+                </Box>
+              </Box>
+              <Box sx={{ maxHeight: 180, overflowY: 'auto', px: 1 }}>
+                {last10.map((r, i) => {
+                  const d = new Date(r.date);
+                  const dateStr = d.toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                  const timeStr = d.toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' });
+                  const color = r.percentage >= 70 ? '#1dc198' : r.percentage >= 40 ? '#ffb921' : '#ff397e';
+                  return (
+                    <Box
+                      key={i}
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        py: 0.6,
+                        px: 1,
+                        borderRadius: '8px',
+                        '&:nth-of-type(odd)': { backgroundColor: 'rgba(0,0,0,0.02)' },
+                      }}
+                    >
+                      <Typography variant="body2" sx={{ color: '#8c8c8c', fontSize: 13 }}>
+                        {dateStr} {timeStr}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 700, color: '#36363f', fontSize: 13 }}>
+                          {r.earned}/{r.total}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 800,
+                            color,
+                            fontSize: 13,
+                            minWidth: 40,
+                            textAlign: 'right',
+                          }}
+                        >
+                          {r.percentage}%
+                        </Typography>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
+          );
+        })()}
         {/* Timer config */}
         <Box sx={{ mb: 3, textAlign: 'left' }}>
           <FormControlLabel

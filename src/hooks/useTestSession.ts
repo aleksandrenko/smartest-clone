@@ -15,6 +15,7 @@ import {
   TOTAL_POINTS,
 } from '../data/types';
 import { generateTest, gradeAllQuestions } from '../utils/questionGenerator';
+import { saveTestResult } from '../utils/testHistory';
 
 export interface TestSessionState {
   questions: Question[];
@@ -147,6 +148,9 @@ export function useTestSession() {
     setAnswers(gradedAnswers);
     setTotalEarned(earned);
     setIsSubmitted(true);
+
+    // Save to localStorage
+    saveTestResult(earned, TOTAL_POINTS);
   }, [questions, answers, isSubmitted]);
 
   // Count unanswered questions
